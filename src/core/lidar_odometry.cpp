@@ -49,6 +49,7 @@ void LiDAROdometry::feedScan(double timestamp,
   OdomData odom_cur;
   odom_cur.timestamp = timestamp;
   odom_cur.pose = Eigen::Matrix4d::Identity();
+  ROS_INFO("feed scan");
 
   VPointCloud::Ptr scan_in_target(new VPointCloud());
   if (map_cloud_->empty()) {
@@ -57,6 +58,7 @@ void LiDAROdometry::feedScan(double timestamp,
     Eigen::Matrix4d T_LtoM_predict = odom_data_.back().pose * pose_predict;
     registration(cur_scan, T_LtoM_predict, odom_cur.pose, scan_in_target);
   }
+  ROS_INFO_STREAM("ndt tf matrix: "<<odom_cur.pose);
   odom_data_.push_back(odom_cur);
 
   if (update_map) {

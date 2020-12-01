@@ -61,7 +61,11 @@ CalibrHelper::CalibrHelper(ros::NodeHandle& nh)
     IO::LidarModelType lidar_model_type = IO::LidarModelType::VLP_16;
     if (lidar_model == "VLP_16") {
       lidar_model_type = IO::LidarModelType::VLP_16;
-    } else {
+    } else if(lidar_model == "PANDAR_40")
+    {
+      lidar_model_type = IO::LidarModelType::PANDAR_40;
+    }
+     else {
       calib_step_ = Error;
       ROS_WARN("LiDAR model %s not support yet.", lidar_model.c_str());
     }
@@ -72,23 +76,26 @@ CalibrHelper::CalibrHelper(ros::NodeHandle& nh)
     dataset_reader_ = lio_dataset_temp.get_data();
     dataset_reader_->adjustDataset();
   }
+  ROS_INFO("flag 1...");
 
   map_time_ = dataset_reader_->get_start_time();
   scan4map_time_ = map_time_ + scan4map;
   double end_time = dataset_reader_->get_end_time();
+  ROS_INFO("flag 2...");
 
   traj_manager_ = std::make_shared<TrajectoryManager>(
           map_time_, end_time, knot_distance, time_offset_padding);
-
+  ROS_INFO("flag 3...");
   scan_undistortion_ = std::make_shared<ScanUndistortion>(
           traj_manager_, dataset_reader_);
-
+	ROS_INFO("flag 4...");
   lidar_odom_ = std::make_shared<LiDAROdometry>(ndt_resolution_);
-
+	ROS_INFO("flag 5...");
   rotation_initializer_ = std::make_shared<InertialInitializer>();
-
+	ROS_INFO("flag 6...");
   surfel_association_ = std::make_shared<SurfelAssociation>(
           associated_radius_, plane_lambda_);
+	ROS_INFO("flag 7...");
 }
 
 bool CalibrHelper::createCacheFolder(const std::string& bag_path) {
@@ -106,10 +113,12 @@ void CalibrHelper::Initialization() {
     ROS_WARN("[Initialization] Need status: Start.");
     return;
   }
+  ROS_INFO("start feed IMU data");
   for (const auto& imu_data: dataset_reader_->get_imu_data()) {
     traj_manager_->feedIMUData(imu_data);
   }
   traj_manager_->initialSO3TrajWithGyro();
+  ROS_INFO("finish traj init");
 
   for(const TPointCloud& raw_scan: dataset_reader_->get_scan_data()) {
     VPointCloud::Ptr cloud(new VPointCloud);

@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-bag_path="/home/ha/rosbag/li_calib_data"
+bag_path="/home/rdcas/calibration_ws/lidar-imu-bag/pandar_imu_data"
 
 outdoor_sync_bag_name=(
-#"Court-01.bag"
+"pg.bag"
 #"Court-02.bag"
 #"Court-03.bag"
 #"Court-04.bag"
@@ -11,7 +11,7 @@ outdoor_sync_bag_name=(
 )
 
 indoor_sync_bag_name=(
-"Garage-01.bag"
+# "Garage-01.bag"
 #"Garage-02.bag"
 #"Garage-03.bag"
 #"Garage-04.bag"
@@ -19,7 +19,7 @@ indoor_sync_bag_name=(
 )
 
 imu_topic_name=(
-"/imu1/data_sync"
+"/imu_raw"
 #"/imu2/data_sync"
 #"/imu3/data_sync"
 )
@@ -29,7 +29,7 @@ bag_durr=30
 scan4map=15
 timeOffsetPadding=0.015
 
-show_ui=true  #false
+show_ui=false  #false
 
 bag_count=-1
 sync_bag_name=(${outdoor_sync_bag_name[*]} ${indoor_sync_bag_name[*]})
@@ -55,7 +55,7 @@ for i in "${!sync_bag_name[@]}"; do
                           bag_start:="${bag_start}" \
                           bag_durr:="${bag_durr}" \
                           scan4map:="${scan4map}" \
-                          lidar_model:="VLP_16" \
+                          lidar_model:="PANDAR_40" \
                           time_offset_padding:="${timeOffsetPadding}"\
                           ndtResolution:="${ndtResolution}" \
                           show_ui:="${show_ui}"

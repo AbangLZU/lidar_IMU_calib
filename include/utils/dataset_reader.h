@@ -34,6 +34,7 @@
 #include <Eigen/Core>
 #include <utils/eigen_utils.hpp>
 #include <utils/vlp_common.h>
+#include <utils/pcl_utils.h>
 
 namespace licalib {
 namespace IO {
@@ -57,6 +58,7 @@ struct PoseData {
 enum LidarModelType {
     VLP_16,
     VLP_16_SIMU,
+    PANDAR_40,
 };
 
 class LioDataset {
@@ -91,6 +93,10 @@ public:
       case LidarModelType::VLP_16_SIMU:
         p_LidarConvert_ = VelodyneCorrection::Ptr(
                 new VelodyneCorrection(VelodyneCorrection::ModelType::VLP_16));
+        break;
+      case LidarModelType::PANDAR_40:
+        // currently only support pandar point cloud data
+        std::cout<<"currently only support pandar point cloud data"<<std::endl;
         break;
       default:
         std::cout << "LiDAR model " << lidar_model_
@@ -139,10 +145,20 @@ public:
           p_LidarConvert_->unpack_scan(vlp_msg, pointcloud);
         }
         if (m.getDataType() == std::string("sensor_msgs/PointCloud2")) {
+
           sensor_msgs::PointCloud2::ConstPtr scan_msg =
                   m.instantiate<sensor_msgs::PointCloud2>();
           timestamp = scan_msg->header.stamp.toSec();
-          p_LidarConvert_->unpack_scan(scan_msg, pointcloud);
+          if (lidar_model_ == LidarModelType::PANDAR_40)
+          {
+          	// the pointcloud of Pandar40 lidar include the xyz ring, intensity and timestamp
+          	// so we can directly parse it as TPointCloud
+          	pcl::fromROSMsg(*scan_msg, pointcloud);
+//          	ROS_INFO_STREAM("point cloud height: "<<pointcloud.height<<" width: "
+//          	                <<pointcloud.width);
+          }else{
+            p_LidarConvert_->unpack_scan(scan_msg, pointcloud);
+          }
         }
 
         data_->scan_data_.emplace_back(pointcloud);
@@ -183,7 +199,7 @@ public:
     assert(scan_timestamps.front() < imu_data.back().timestamp
            && scan_timestamps.back() > imu_data.front().timestamp
            && "Unvalid dataset. Check your dataset.. ");
-
+	ROS_INFO("start adjust the dataset...");
     if (scan_timestamps_.front() > imu_data_.front().timestamp) {
       start_time_ = scan_timestamps_.front();
       while (imu_data_.front().timestamp < start_time_)
@@ -206,7 +222,7 @@ public:
       scan_data_.pop_back();
       scan_timestamps_.pop_back();
     }
-    //std::cout<<"after adjust --> imu size : "<< imu_data_.size() << std::endl;
+    std::cout<<"after adjust --> imu size : "<< imu_data_.size() << std::endl;
   }
 
   void reset() { data_.reset(); }
